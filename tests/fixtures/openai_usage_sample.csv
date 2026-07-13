@@ -1,0 +1,6 @@
+timestamp,model,operation,n_context_tokens_total,n_generated_tokens_total,n_requests
+2026-06-01T00:00:00,gpt-4o,completion,420000,1200000,900
+2026-06-01T00:00:00,gpt-4o-mini,completion,980000,5400000,1200
+2026-06-02T00:00:00,gpt-4o,completion,410000,1150000,870
+2026-06-02T00:00:00,gpt-3.5-turbo,completion,300000,8800000,2100
+2026-06-03T00:00:00,gpt-4o-mini,completion,960000,5200000,1180

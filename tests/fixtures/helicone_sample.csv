@@ -1,0 +1,11 @@
+request_id,created_at,model,prompt_tokens,completion_tokens,total_tokens,status,latency_ms,request_body
+req-hel-000,2026-06-01T09:00:00Z,gpt-4o-mini,120,30,150,200,850,"{""model"": ""gpt-4o-mini"", ""messages"": [{""role"": ""user"", ""content"": ""Summarize the following customer support ticket in one short sentence.""}]}"
+req-hel-001,2026-06-01T09:05:00Z,gpt-4o-mini,118,28,146,200,850,"{""model"": ""gpt-4o-mini"", ""messages"": [{""role"": ""user"", ""content"": ""Summarize the following customer support ticket in one short sentence.""}]}"
+req-hel-002,2026-06-01T10:00:00Z,gpt-4o,80,12,92,200,850,"{""model"": ""gpt-4o"", ""messages"": [{""role"": ""user"", ""content"": ""Classify the sentiment of this product review as positive, negative, or neutral.""}]}"
+req-hel-003,2026-06-01T10:03:00Z,gpt-4o,79,11,90,200,850,"{""model"": ""gpt-4o"", ""messages"": [{""role"": ""user"", ""content"": ""Classify the sentiment of this product review as positive, negative, or neutral.""}]}"
+req-hel-004,2026-06-01T11:00:00Z,gpt-4o,340,360,700,200,850,"{""model"": ""gpt-4o"", ""messages"": [{""role"": ""user"", ""content"": ""Translate the following paragraph from English to French, preserving tone.""}]}"
+req-hel-005,2026-06-02T09:00:00Z,gpt-3.5-turbo,210,180,390,200,850,"{""model"": ""gpt-3.5-turbo"", ""messages"": [{""role"": ""user"", ""content"": ""Write a Python function that returns the nth Fibonacci number iteratively.""}]}"
+req-hel-006,2026-06-02T10:00:00Z,gpt-4o,45000,800,45800,200,850,"{""model"": ""gpt-4o"", ""messages"": [{""role"": ""user"", ""content"": ""Given the following 40 page contract, extract every payment obligation and its due date.""}]}"
+req-hel-007,2026-06-02T12:00:00Z,gpt-4o,81,0,81,429,850,"{""model"": ""gpt-4o"", ""messages"": [{""role"": ""user"", ""content"": ""Classify the sentiment of this product review as positive, negative, or neutral.""}]}"
+req-hel-008,2026-06-03T09:00:00Z,gpt-3.5-turbo,330,0,330,500,850,"{""model"": ""gpt-3.5-turbo"", ""messages"": [{""role"": ""user"", ""content"": ""Translate the following paragraph from English to French, preserving tone.""}]}"
+req-hel-009,2026-06-03T10:00:00Z,gpt-4o-mini,121,33,154,200,850,"{""model"": ""gpt-4o-mini"", ""messages"": [{""role"": ""user"", ""content"": ""Summarize the following customer support ticket in one short sentence.""}]}"

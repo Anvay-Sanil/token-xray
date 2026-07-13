@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+uv.lock
+
+# Local run artifacts (never commit a client's report)
+xray_report.json
+xray_report.html
+*.xray.json
+
+# OS
+.DS_Store
+Thumbs.db
