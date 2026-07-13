@@ -1,7 +1,7 @@
 """Parser contract and the shared record-building helper.
 
 ``build_record`` is the one place where raw prompt text is allowed to exist,
-and only transiently: it derives the hash + MinHash signature and lets the text
+and only transiently: it derives the hash + bottom-k sketch and lets the text
 go out of scope. Every parser MUST create records through this helper so the
 "text never persists" guarantee holds in exactly one auditable location.
 """
@@ -33,16 +33,16 @@ def build_record(
     """Build a NormalizedRecord, converting any prompt text to aggregates.
 
     ``prompt_text`` is read here and nowhere stored: if it is non-blank we keep a
-    salted hash and a MinHash signature; the string itself is dropped on return.
+    salted hash and a bottom-k sketch; the string itself is dropped on return.
     """
     prompt_hash: Optional[str] = None
-    minhash_signature: Optional[tuple[int, ...]] = None
+    prompt_sketch: Optional[tuple[int, ...]] = None
 
     if prompt_text:
         normalized = _normalize.normalize_prompt(prompt_text)
         if normalized:
             prompt_hash = _normalize.prompt_hash(normalized)
-            minhash_signature = _normalize.minhash_signature(normalized)
+            prompt_sketch = _normalize.bottom_k_sketch(normalized)
 
     return NormalizedRecord(
         source_format=source_format,
@@ -56,7 +56,7 @@ def build_record(
         status=status,
         n_requests=n_requests,
         prompt_hash=prompt_hash,
-        minhash_signature=minhash_signature,
+        prompt_sketch=prompt_sketch,
     )
 
 

@@ -23,7 +23,7 @@ def test_litellm_jsonl_parses(fixtures_dir):
     assert pe.record_count == 14
     assert pe.capabilities.per_request
     assert pe.capabilities.has_prompt_text
-    assert any(r.minhash_signature is not None for r in pe.records)
+    assert any(r.prompt_sketch is not None for r in pe.records)
     assert sum(1 for r in pe.records if r.is_error) == 2
     assert any((r.input_tokens or 0) > 40000 for r in pe.records)  # long-context tail row
 
@@ -34,7 +34,7 @@ def test_helicone_csv_parses(fixtures_dir):
     assert pe.record_count == 10
     assert pe.capabilities.per_request
     assert pe.capabilities.has_prompt_text
-    assert any(r.minhash_signature is not None for r in pe.records)
+    assert any(r.prompt_sketch is not None for r in pe.records)
     assert sum(1 for r in pe.records if r.is_error) == 2  # 429 + 500
 
 

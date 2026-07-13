@@ -1,23 +1,29 @@
-"""Exact and near-duplicate prompt analysis over stored signatures.
+"""Exact and near-duplicate prompt analysis over bottom-k sketches. Stdlib only.
 
-Operates exclusively on the ``prompt_hash`` / ``minhash_signature`` fields that
+Operates exclusively on the ``prompt_hash`` / ``prompt_sketch`` fields that
 parsers computed at ingest — raw prompt text no longer exists by this stage.
 
-Detection is two-stage: an LSH index at a low threshold generates candidate
-pairs with high recall, then every candidate is verified against the estimated
-Jaccard similarity computed directly from the stored signatures. Only verified
-pairs count, so the reported rate is not inflated by LSH banding noise.
+Pairing is sub-quadratic by construction (never all-pairs):
+
+1. Records are grouped by exact prompt hash; near-duplicate search runs over
+   unique prompts only (exact duplicates inherit the flag by definition).
+2. Candidate generation uses prefix filtering: each unique prompt is indexed
+   under its smallest ``_PREFIX`` sketch values. Two prompts with Jaccard >=
+   0.5 share smallest-values with overwhelming probability, so recall stays
+   high while the index stays linear in the number of unique prompts.
+3. Every candidate pair is verified with the sketch Jaccard estimate before it
+   counts. Caps on bucket size, gathered candidates, and verification attempts
+   bound the worst case; they can miss pairs in adversarial distributions,
+   which is acceptable for an aggregate rate and documented in the README.
 """
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Iterable
 
-from datasketch import MinHash, MinHashLSH
-
-from token_xray.analysis.normalize import NUM_PERM
+from token_xray.analysis.normalize import estimate_jaccard
 from token_xray.models import NormalizedRecord
 
 # Verified estimated-Jaccard threshold for two prompts to count as near-duplicates.
@@ -25,14 +31,15 @@ from token_xray.models import NormalizedRecord
 # two — the pattern that matters for duplicate-rate reporting.
 NEAR_DUP_THRESHOLD = 0.5
 
-# LSH banding threshold for candidate generation only. Kept below the decision
-# threshold so borderline pairs still surface as candidates for verification.
-_LSH_CANDIDATE_THRESHOLD = 0.4
+_PREFIX = 16  # smallest sketch values indexed/queried per unique prompt
+_BUCKET_CAP = 200  # stored postings per indexed value
+_CANDIDATE_CAP = 64  # candidates gathered per query
+_VERIFY_CAP = 16  # verification attempts per query
 
 
 @dataclass(frozen=True)
 class DuplicateStats:
-    """Duplicate counts over the records that carried prompt signatures."""
+    """Duplicate counts over the records that carried prompt sketches."""
 
     analyzed_records: int
     exact_duplicate_records: int
@@ -47,52 +54,59 @@ class DuplicateStats:
         return self.near_duplicate_records / self.analyzed_records if self.analyzed_records else 0.0
 
 
-def _rehydrate(signature: Sequence[int]) -> MinHash:
-    m = MinHash(num_perm=NUM_PERM)
-    m.hashvalues[:] = list(signature)
-    return m
-
-
-def _estimated_jaccard(a: Sequence[int], b: Sequence[int]) -> float:
-    return sum(1 for x, y in zip(a, b) if x == y) / len(a)
-
-
 def duplicate_stats(records: Iterable[NormalizedRecord]) -> DuplicateStats:
-    """Compute exact- and near-duplicate counts from record signatures.
+    """Compute exact- and near-duplicate counts from record sketches.
 
     A record is an exact duplicate if its prompt hash appears more than once; a
-    near duplicate if at least one other record's signature has a verified
-    estimated Jaccard >= ``NEAR_DUP_THRESHOLD``. Exact duplicates are by
+    near duplicate if its prompt has a verified sketch-Jaccard >=
+    ``NEAR_DUP_THRESHOLD`` with any other prompt. Exact duplicates are by
     definition also near duplicates.
     """
-    with_sig = [r for r in records if r.minhash_signature is not None and r.prompt_hash is not None]
-    if not with_sig:
+    with_sketch = [r for r in records if r.prompt_sketch and r.prompt_hash]
+    if not with_sketch:
         return DuplicateStats(0, 0, 0)
 
-    hash_counts = Counter(r.prompt_hash for r in with_sig)
-    exact_flags = [hash_counts[r.prompt_hash] > 1 for r in with_sig]
+    # --- stage 1: exact groups --------------------------------------------
+    group_sizes: Counter[str] = Counter(r.prompt_hash for r in with_sketch)  # type: ignore[misc]
+    sketches: dict[str, tuple[int, ...]] = {}
+    for record in with_sketch:
+        sketches.setdefault(record.prompt_hash, record.prompt_sketch)  # type: ignore[arg-type]
+    unique_hashes = list(sketches)
 
-    lsh = MinHashLSH(threshold=_LSH_CANDIDATE_THRESHOLD, num_perm=NUM_PERM)
-    minhashes = [_rehydrate(r.minhash_signature) for r in with_sig]  # type: ignore[arg-type]
-    for i, m in enumerate(minhashes):
-        lsh.insert(str(i), m)
+    exact_records = sum(size for size in group_sizes.values() if size > 1)
 
-    near_flags = list(exact_flags)  # exact dupes always count as near dupes
-    for i, (record, m) in enumerate(zip(with_sig, minhashes)):
-        if near_flags[i]:
+    # --- stage 2: prefix-filter index over unique prompts ------------------
+    buckets: dict[int, list[int]] = defaultdict(list)
+    for idx, prompt_hash in enumerate(unique_hashes):
+        for value in sketches[prompt_hash][:_PREFIX]:
+            bucket = buckets[value]
+            if len(bucket) < _BUCKET_CAP:
+                bucket.append(idx)
+
+    # --- stage 3: gather candidates, verify, count -------------------------
+    near_records = 0
+    for idx, prompt_hash in enumerate(unique_hashes):
+        size = group_sizes[prompt_hash]
+        if size > 1:  # exact-duplicate group: near by definition
+            near_records += size
             continue
-        for key in lsh.query(m):
-            j = int(key)
-            if j == i:
-                continue
-            candidate = with_sig[j].minhash_signature
-            assert record.minhash_signature is not None and candidate is not None
-            if _estimated_jaccard(record.minhash_signature, candidate) >= NEAR_DUP_THRESHOLD:
-                near_flags[i] = True
+
+        sketch = sketches[prompt_hash]
+        gathered: Counter[int] = Counter()
+        for value in sketch[:_PREFIX]:
+            for other in buckets.get(value, ()):
+                if other != idx:
+                    gathered[other] += 1
+            if len(gathered) >= _CANDIDATE_CAP:
+                break
+
+        for other, _shared in gathered.most_common(_VERIFY_CAP):
+            if estimate_jaccard(sketch, sketches[unique_hashes[other]]) >= NEAR_DUP_THRESHOLD:
+                near_records += 1
                 break
 
     return DuplicateStats(
-        analyzed_records=len(with_sig),
-        exact_duplicate_records=sum(exact_flags),
-        near_duplicate_records=sum(near_flags),
+        analyzed_records=len(with_sketch),
+        exact_duplicate_records=exact_records,
+        near_duplicate_records=near_records,
     )

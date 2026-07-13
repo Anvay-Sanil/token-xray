@@ -2,8 +2,8 @@
 
 A ``NormalizedRecord`` is the single unified row shape every parser produces.
 It holds aggregates only: token counts, cost, and — when prompt text was
-available at ingest — an irreversible hash and MinHash signature. It never
-holds raw prompt text.
+available at ingest — an irreversible hash and bottom-k shingle sketch. It
+never holds raw prompt text.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ class NormalizedRecord:
     status: Optional[str] = None
     n_requests: int = 1
     prompt_hash: Optional[str] = None
-    minhash_signature: Optional[tuple[int, ...]] = None
+    prompt_sketch: Optional[tuple[int, ...]] = None
 
 
 @dataclass(frozen=True)

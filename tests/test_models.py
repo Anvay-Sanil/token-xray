@@ -27,7 +27,7 @@ def test_build_record_computes_signature_and_hash_from_prompt():
     )
     assert isinstance(rec, NormalizedRecord)
     assert rec.prompt_hash is not None and len(rec.prompt_hash) == 64
-    assert rec.minhash_signature is not None and len(rec.minhash_signature) == 128
+    assert rec.prompt_sketch is not None and 0 < len(rec.prompt_sketch) <= 128
 
 
 def test_build_record_never_retains_raw_prompt_text():
@@ -61,7 +61,7 @@ def test_build_record_without_prompt_has_no_signature():
         n_requests=42,
     )
     assert rec.prompt_hash is None
-    assert rec.minhash_signature is None
+    assert rec.prompt_sketch is None
     assert rec.n_requests == 42
 
 
@@ -77,7 +77,7 @@ def test_build_record_blank_prompt_has_no_signature():
         prompt_text="   \n  ",
     )
     assert rec.prompt_hash is None
-    assert rec.minhash_signature is None
+    assert rec.prompt_sketch is None
 
 
 def test_record_is_immutable():
