@@ -15,7 +15,6 @@ env/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-uv.lock
 
 # Local run artifacts (never commit a client's report)
 xray_report.json
