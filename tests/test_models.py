@@ -1,6 +1,6 @@
 """Tests for the normalized record model and the build_record ingest helper.
 
-build_record is where Amendment 1 lives: MinHash + hash are computed at ingest
+build_record is where Amendment 1 lives: sketch + hash are computed at ingest
 and the raw prompt text is dropped on the spot, never reaching a stored field.
 """
 

@@ -75,3 +75,15 @@ def test_terminal_output_contains_no_advice(fixtures_dir):
     lowered = result.output.lower()
     for banned in ("recommend", "you should", "consider ", "savings", "switch to", "migrate"):
         assert banned not in lowered
+
+
+def test_malformed_file_exits_cleanly_without_traceback(fixtures_dir, tmp_path):
+    good = (fixtures_dir / "litellm_proxy_sample.jsonl").read_text(encoding="utf-8").splitlines()
+    broken = tmp_path / "truncated.jsonl"
+    broken.write_text(good[0] + "\n" + '{"model": "gpt-4o", "usa\n', encoding="utf-8")
+
+    result = runner.invoke(app, ["analyze", str(broken)])
+    assert result.exit_code == 2
+    out = _all_output(result)
+    assert "line 2" in out
+    assert "Traceback" not in out

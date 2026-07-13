@@ -94,3 +94,21 @@ def test_report_contains_no_advice_strings(fixtures_dir):
     text = repr(report.to_dict()).lower()
     for banned in ("recommend", "should ", "consider ", "savings", "switch to", "migrate"):
         assert banned not in text
+
+
+def test_tier_classification_survives_substring_collisions():
+    """P1 regression (review 2026-07-14): 'mini' must not match inside 'geMINI'."""
+    from token_xray.analysis.aggregates import _tier
+
+    assert _tier("gemini-1.5-pro") == "mid"
+    assert _tier("gemini-pro") == "mid"
+    assert _tier("gemini-2.0-flash") == "cheap"  # flash IS the cheap gemini tier
+    assert _tier("gemini-ultra") == "frontier"
+    assert _tier("gpt-4o-mini") == "cheap"
+    assert _tier("gpt-4o") == "mid"
+    assert _tier("o1-preview") == "frontier"
+    assert _tier("claude-3-haiku-20240307") == "cheap"
+    assert _tier("claude-3-opus-20240229") == "frontier"
+    assert _tier("gpt-3.5-turbo") == "cheap"
+    assert _tier("some-custom-model") == "unknown"
+    assert _tier(None) == "unknown"

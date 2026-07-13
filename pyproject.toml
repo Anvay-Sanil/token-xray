@@ -28,7 +28,7 @@ dependencies = [
 
 [project.optional-dependencies]
 # Heavy, optional. Semantic near-duplicate detection via local embeddings.
-# The default near-duplicate path (MinHash) needs none of this.
+# The default near-duplicate path (stdlib bottom-k sketch) needs none of this.
 embeddings = ["sentence-transformers>=2.2"]
 
 [project.scripts]

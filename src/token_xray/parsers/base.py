@@ -16,6 +16,14 @@ from token_xray.analysis import normalize as _normalize
 from token_xray.models import FormatCapabilities, NormalizedRecord, ParsedExport
 
 
+class ParseError(ValueError):
+    """A file was recognized but could not be parsed cleanly.
+
+    Raised with a human-readable message (file + line/row where possible) so the
+    CLI can fail with a clear explanation instead of a traceback.
+    """
+
+
 def build_record(
     *,
     source_format: str,

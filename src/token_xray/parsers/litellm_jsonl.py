@@ -7,7 +7,7 @@ from pathlib import Path
 
 from token_xray.models import FormatCapabilities, ParsedExport
 from token_xray.parsers._util import messages_to_text, parse_ts
-from token_xray.parsers.base import build_record
+from token_xray.parsers.base import ParseError, build_record
 
 _HINT_KEYS = ("call_type", "usage", "response_cost", "litellm_call_id", "messages")
 _ERROR_STATUSES = {"failure", "error", "failed"}
@@ -27,11 +27,20 @@ class LiteLLMJsonlParser:
     def parse(self, path: Path) -> ParsedExport:
         records = []
         with Path(path).open("r", encoding="utf-8", errors="ignore") as f:
-            for line in f:
+            for lineno, line in enumerate(f, 1):
                 line = line.strip()
                 if not line:
                     continue
-                obj = json.loads(line)
+                try:
+                    obj = json.loads(line)
+                except (json.JSONDecodeError, ValueError) as exc:
+                    raise ParseError(
+                        f"Malformed JSON on line {lineno} of '{path}': {exc}"
+                    ) from exc
+                if not isinstance(obj, dict):
+                    raise ParseError(
+                        f"Expected a JSON object on line {lineno} of '{path}', got {type(obj).__name__}."
+                    )
                 usage = obj.get("usage") or {}
                 status = obj.get("status")
                 is_error = bool(obj.get("exception")) or (

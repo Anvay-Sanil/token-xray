@@ -85,3 +85,21 @@ def test_unknown_format_raises_and_names_supported(tmp_path):
 def test_unknown_forced_format_raises(fixtures_dir):
     with pytest.raises(UnknownFormatError):
         parse(fixtures_dir / "openai_usage_sample.csv", fmt="not_a_real_format")
+
+
+def test_malformed_jsonl_line_raises_clean_parse_error(fixtures_dir, tmp_path):
+    """P1 regression (review 2026-07-14): a corrupt mid-file line must produce an
+    explicit ParseError naming the line — never a raw traceback."""
+    import pytest
+    from token_xray.parsers import ParseError, UnknownFormatError
+
+    good = (fixtures_dir / "litellm_proxy_sample.jsonl").read_text(encoding="utf-8").splitlines()
+    broken = tmp_path / "truncated.jsonl"
+    broken.write_text(good[0] + "\n" + good[1] + "\n" + '{"model": "gpt-4o", "usage": {"promp\n', encoding="utf-8")
+
+    with pytest.raises(ParseError) as excinfo:
+        parse(broken)
+    assert "line 3" in str(excinfo.value)
+    assert str(broken) in str(excinfo.value)
+    # detection succeeded, so this must NOT be reported as an unknown format
+    assert not isinstance(excinfo.value, UnknownFormatError)

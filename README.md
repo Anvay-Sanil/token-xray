@@ -70,9 +70,10 @@ pip install "token-xray[embeddings]"   # optional, heavy; not required
 
 - Each prompt is lowercased, whitespace-normalized, split into 3-word shingles, and
   reduced to the **k = 128 smallest 64-bit shingle hashes** (a bottom-k / KMV sketch).
-- For prompts with **≤ 128 shingles (roughly ≤ 130 words) the Jaccard estimate is
-  exact** — the sketch contains the complete shingle set. Beyond that, the standard
-  k-minimum-values estimator applies with error on the order of **±1/√k (~±0.09)**.
+- For prompts with **fewer than 128 shingles (under ~130 words) the Jaccard estimate
+  is exact** — the sketch contains the complete shingle set. At or beyond that, the
+  standard k-minimum-values estimator applies with error on the order of
+  **±1/√k (~±0.09)**.
 - Two prompts count as near-duplicates at estimated **Jaccard ≥ 0.5** — roughly "the
   same template with a word or two changed."
 - Candidate pairing is sub-quadratic (prefix filtering over the smallest sketch values,

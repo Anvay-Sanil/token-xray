@@ -12,6 +12,7 @@ suggestion strings, and no cost projections of any kind.
 from __future__ import annotations
 
 import math
+import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Any, Optional
@@ -22,12 +23,20 @@ from token_xray.models import NormalizedRecord, ParsedExport
 UNAVAILABLE_REASON = "unavailable from this export format"
 
 # Heuristic price-tier patterns, checked in order (cheap first so that e.g.
-# "gpt-4o-mini" matches its "mini" suffix before the broader "gpt-4o" rule).
-# Pattern membership is name-based and auditable; unmatched models are "unknown".
-_TIER_PATTERNS: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("cheap", ("mini", "nano", "lite", "haiku", "flash", "3.5-turbo", "35-turbo")),
-    ("frontier", ("opus", "o1", "o3", "gpt-4.5", "gpt-5", "ultra")),
-    ("mid", ("gpt-4", "sonnet", "gemini-1.5-pro", "gemini-pro", "mistral-large")),
+# "gpt-4o-mini" matches its "mini" suffix before the broader "gpt-4" rule).
+# Patterns are regexes: "mini"/"o1"/"o3" carry a boundary guard so they cannot
+# match inside a longer word ("mini" inside "geMINI" was a real bug — see the
+# tier regression test). Unmatched models are reported as "unknown", never guessed.
+_TIER_PATTERNS: tuple[tuple[str, tuple[re.Pattern[str], ...]], ...] = (
+    ("cheap", tuple(re.compile(p) for p in (
+        r"(?<![a-z])mini", "nano", r"(?<![a-z])lite(?![a-z])", "haiku", "flash", r"3\.5-turbo", "35-turbo",
+    ))),
+    ("frontier", tuple(re.compile(p) for p in (
+        "opus", r"(?<![a-z0-9])o1(?![a-z])", r"(?<![a-z0-9])o3(?![a-z])", r"gpt-4\.5", "gpt-5", "ultra",
+    ))),
+    ("mid", tuple(re.compile(p) for p in (
+        "gpt-4", "sonnet", r"gemini-1\.5-pro", "gemini-pro", "mistral-large",
+    ))),
 )
 
 
@@ -90,7 +99,7 @@ def _day(record: NormalizedRecord) -> str:
 def _tier(model: Optional[str]) -> str:
     name = (model or "").lower()
     for tier, patterns in _TIER_PATTERNS:
-        if any(p in name for p in patterns):
+        if any(p.search(name) for p in patterns):
             return tier
     return "unknown"
 

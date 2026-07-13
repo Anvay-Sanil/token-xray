@@ -11,7 +11,7 @@ from pathlib import Path
 from token_xray.models import ParsedExport
 from token_xray.parsers._util import read_head
 from token_xray.parsers.anthropic_csv import AnthropicCsvParser
-from token_xray.parsers.base import Parser
+from token_xray.parsers.base import Parser, ParseError
 from token_xray.parsers.helicone import HeliconeParser
 from token_xray.parsers.litellm_jsonl import LiteLLMJsonlParser
 from token_xray.parsers.openai_csv import OpenAICsvParser
@@ -26,7 +26,7 @@ _PARSERS: tuple[Parser, ...] = (
 )
 
 
-class UnknownFormatError(ValueError):
+class UnknownFormatError(ParseError):
     """Raised when a file matches no known export format."""
 
 
@@ -60,4 +60,4 @@ def parse(path: str | Path, fmt: str | None = None) -> ParsedExport:
     return detect(path).parse(path)
 
 
-__all__ = ["UnknownFormatError", "detect", "parse", "supported_formats"]
+__all__ = ["ParseError", "UnknownFormatError", "detect", "parse", "supported_formats"]

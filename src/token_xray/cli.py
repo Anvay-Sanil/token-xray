@@ -13,7 +13,7 @@ import typer
 from rich.console import Console
 
 from token_xray.analysis.aggregates import compute_report
-from token_xray.parsers import UnknownFormatError, parse, supported_formats
+from token_xray.parsers import ParseError, parse, supported_formats
 from token_xray.report import export_json, render_html, render_terminal
 
 app = typer.Typer(
@@ -70,7 +70,7 @@ def analyze(
         raise typer.Exit(code=2)
     try:
         run_analysis(file, fmt=fmt, json_out=json_out, html_out=html_out)
-    except UnknownFormatError as exc:
+    except ParseError as exc:  # includes UnknownFormatError
         _err_console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=2) from exc
     if json_out is not None:
