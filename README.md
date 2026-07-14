@@ -36,15 +36,18 @@ token-xray analyze tests/fixtures/litellm_proxy_sample.jsonl
 
 ## Supported formats (v0)
 
-| Format | Source | Level | Prompt text present? |
-|--------|--------|-------|----------------------|
-| `openai_csv` | OpenAI usage/activity CSV export (`activity-*.csv`) | billing aggregate | no |
-| `anthropic_csv` | Anthropic Console exports — usage (`claude_api_tokens_*.csv`) and cost (`claude_api_cost_*.csv`) | billing aggregate | no |
-| `litellm_jsonl` | LiteLLM proxy request logs (JSONL) | per-request | yes |
-| `helicone` | Helicone export (CSV or JSONL) | per-request | usually |
+| Format | Source | Level | Prompt text present? | Validated against real exports from |
+|--------|--------|-------|----------------------|-------------------------------------|
+| `openai_csv` | OpenAI usage/activity CSV export (`activity-*.csv`) | billing aggregate | no | Oct 2024 + Apr 2025 formats |
+| `anthropic_csv` | Anthropic Console exports — usage (`claude_api_tokens_*.csv`) and cost (`claude_api_cost_*.csv`) | billing aggregate | no | usage: Jul 2026; cost: Mar 2026 |
+| `litellm_jsonl` | LiteLLM proxy request logs (JSONL) | per-request | yes | synthetic fixture only |
+| `helicone` | Helicone export (CSV or JSONL) | per-request | usually | synthetic fixture only |
 
 The format is auto-detected from the file's header/shape. Unknown files produce an
 explicit error naming the supported formats — never a crash.
+
+Format changed? Open an issue with a redacted header row (column names only) and
+support usually lands quickly.
 
 ### Metric availability
 
