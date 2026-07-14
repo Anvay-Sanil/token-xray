@@ -9,7 +9,7 @@ description = "Local-first analyzer for LLM API spend exports. Zero network call
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Anvay" }]
+authors = [{ name = "Anvay Sanil" }]
 keywords = ["llm", "cost", "openai", "anthropic", "litellm", "helicone", "observability"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -35,8 +35,8 @@ embeddings = ["sentence-transformers>=2.2"]
 token-xray = "token_xray.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/OWNER/token-xray"
-Source = "https://github.com/OWNER/token-xray"
+Homepage = "https://github.com/Anvay-Sanil/token-xray"
+Source = "https://github.com/Anvay-Sanil/token-xray"
 
 [dependency-groups]
 dev = ["pytest>=8.0"]
