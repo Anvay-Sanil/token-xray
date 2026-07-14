@@ -38,8 +38,8 @@ token-xray analyze tests/fixtures/litellm_proxy_sample.jsonl
 
 | Format | Source | Level | Prompt text present? |
 |--------|--------|-------|----------------------|
-| `openai_csv` | OpenAI usage/activity CSV export | billing aggregate | no |
-| `anthropic_csv` | Anthropic Console usage CSV export | billing aggregate | no |
+| `openai_csv` | OpenAI usage/activity CSV export (`activity-*.csv`) | billing aggregate | no |
+| `anthropic_csv` | Anthropic Console exports — usage (`claude_api_tokens_*.csv`) and cost (`claude_api_cost_*.csv`) | billing aggregate | no |
 | `litellm_jsonl` | LiteLLM proxy request logs (JSONL) | per-request | yes |
 | `helicone` | Helicone export (CSV or JSONL) | per-request | usually |
 

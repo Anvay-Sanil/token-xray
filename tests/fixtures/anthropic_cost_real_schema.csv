@@ -1,0 +1,5 @@
+usage_date_utc,model,workspace,api_key,usage_type,context_window,token_type,cost_usd,cost_type,inference_geo,speed
+2026-03-13,Claude Haiku 4.5,Claude Code,example_key,message,≤ 200k,input_no_cache,0.00,token,not_available,
+2026-03-13,Claude Haiku 4.5,Claude Code,example_key,message,≤ 200k,input_cache_read,1.41,token,not_available,
+2026-03-13,Claude Haiku 4.5,Claude Code,example_key,message,≤ 200k,output,2.59,token,not_available,
+2026-03-14,Claude Opus 4.8,Claude Code,example_key,message,≤ 200k,output,10.00,token,not_available,

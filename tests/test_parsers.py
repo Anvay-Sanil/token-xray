@@ -128,3 +128,33 @@ def test_parse_ts_accepts_unix_epoch():
     assert parse_ts("1745366400000").date().isoformat() == "2025-04-23"  # milliseconds
     assert parse_ts("2025-04-23T00:00:00Z").date().isoformat() == "2025-04-23"  # ISO still works
     assert parse_ts("20250423") is not None  # basic ISO date, not epoch
+
+
+def test_anthropic_usage_real_2026_schema(fixtures_dir):
+    """Regression from real-export validation (2026-07-14, real Jul-2026 export
+    from platform.claude.com/usage): input tokens are split across four cache
+    columns and must be summed; model column is model_version; timestamps are
+    hourly. Neither real Anthropic format was even DETECTED before this fix."""
+    pe = parse(fixtures_dir / "anthropic_usage_real_schema.csv")
+    assert pe.source_format == "anthropic_csv"
+    assert pe.capabilities.has_tokens
+    assert pe.capabilities.has_timestamp
+    assert not pe.capabilities.has_cost  # usage export carries no cost column
+
+    assert sum(r.input_tokens or 0 for r in pe.records) == 296 + (208367 + 1000 + 50000) + 8
+    assert sum(r.output_tokens or 0 for r in pe.records) == 27 + 39423 + 1
+    days = {r.timestamp.date().isoformat() for r in pe.records if r.timestamp}
+    assert days == {"2026-07-03", "2026-07-04"}
+    assert {r.model for r in pe.records} == {"claude-opus-4-8", "claude-haiku-4-5"}
+
+
+def test_anthropic_cost_real_2026_schema(fixtures_dir):
+    """Real cost export (claude_api_cost_*.csv): long format, one row per
+    model x token_type with cost_usd, display-style model names, no tokens."""
+    pe = parse(fixtures_dir / "anthropic_cost_real_schema.csv")
+    assert pe.source_format == "anthropic_csv"
+    assert pe.capabilities.has_cost
+    assert not pe.capabilities.has_tokens
+
+    assert sum(r.cost_usd or 0 for r in pe.records) == pytest.approx(14.00)
+    assert {r.model for r in pe.records} == {"Claude Haiku 4.5", "Claude Opus 4.8"}
