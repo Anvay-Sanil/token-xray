@@ -6,6 +6,10 @@ exception class is RFC-2606 ``@example.com`` addresses, which the privacy test
 uses as deliberately fake PII.
 
 Skipped outside a git checkout (e.g. installed from a wheel or sdist).
+
+CI note: checkouts must use FULL history (actions/checkout fetch-depth: 0) —
+on a shallow clone this test sees a truncated rev-list and false-fails or
+silently under-scans.
 """
 
 from __future__ import annotations
