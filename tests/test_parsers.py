@@ -103,3 +103,28 @@ def test_malformed_jsonl_line_raises_clean_parse_error(fixtures_dir, tmp_path):
     assert str(broken) in str(excinfo.value)
     # detection succeeded, so this must NOT be reported as an unknown format
     assert not isinstance(excinfo.value, UnknownFormatError)
+
+
+def test_openai_activity_real_2025_schema(fixtures_dir):
+    """Regression from real-export validation (2026-07-14, real Apr-2025 export):
+    epoch timestamps must parse and num_requests must be read — defaulting each
+    aggregate row to 1 request silently under-reports totals (P0 class)."""
+    pe = parse(fixtures_dir / "openai_activity_real_schema.csv")
+    assert pe.source_format == "openai_csv"
+    assert pe.capabilities.has_timestamp
+
+    assert sum(r.n_requests for r in pe.records) == 65  # 20+30+10+5, NOT 4
+    days = {r.timestamp.date().isoformat() for r in pe.records if r.timestamp}
+    assert days == {"2025-04-23", "2025-04-24"}
+    assert sum(r.input_tokens or 0 for r in pe.records) == 8000
+    assert sum(r.output_tokens or 0 for r in pe.records) == 1150
+
+
+def test_parse_ts_accepts_unix_epoch():
+    from token_xray.parsers._util import parse_ts
+
+    assert parse_ts("1745366400").date().isoformat() == "2025-04-23"  # seconds
+    assert parse_ts(1745366400).date().isoformat() == "2025-04-23"  # int input
+    assert parse_ts("1745366400000").date().isoformat() == "2025-04-23"  # milliseconds
+    assert parse_ts("2025-04-23T00:00:00Z").date().isoformat() == "2025-04-23"  # ISO still works
+    assert parse_ts("20250423") is not None  # basic ISO date, not epoch

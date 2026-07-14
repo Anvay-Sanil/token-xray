@@ -39,7 +39,7 @@ class OpenAICsvParser:
                         pick(row, "n_generated_tokens_total", "n_generated_tokens", "generated_tokens", "output_tokens")
                     ),
                     cost_usd=to_float(pick(row, "cost", "cost_usd", "amount", "amount_in_usd")),
-                    n_requests=to_int(pick(row, "n_requests", "num_model_requests", "requests")) or 1,
+                    n_requests=to_int(pick(row, "num_requests", "n_requests", "num_model_requests", "requests")) or 1,
                     prompt_text=None,
                 )
             )

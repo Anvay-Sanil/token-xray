@@ -7,9 +7,15 @@ are case-insensitive with aliases and numeric coercion never raises.
 from __future__ import annotations
 
 import csv
-from datetime import datetime
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+# Unix epoch timestamps: 9-10 digits = seconds, 12-13 = milliseconds. 8-digit
+# strings are left to ISO parsing (YYYYMMDD); 11-digit values are ambiguous
+# and rejected. Real OpenAI activity exports use epoch seconds (observed 2025).
+_EPOCH = re.compile(r"^\d{9,10}$|^\d{12,13}$")
 
 
 def read_head(path: Path, n_bytes: int = 4096) -> str:
@@ -71,6 +77,12 @@ def parse_ts(value: object) -> Optional[datetime]:
     text = str(value).strip()
     if text == "":
         return None
+    if _EPOCH.fullmatch(text):
+        seconds = int(text) // 1000 if len(text) >= 12 else int(text)
+        try:
+            return datetime.fromtimestamp(seconds, tz=timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            return None
     if text.endswith("Z"):
         text = text[:-1] + "+00:00"
     try:

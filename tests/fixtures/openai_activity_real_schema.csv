@@ -1,0 +1,5 @@
+organization_id,organization_name,operation,n_context_tokens_total,n_generated_tokens_total,api_key_id,api_key_name,api_key_redacted,api_key_type,project_id,project_name,request_type,n_cached_context_tokens_total,n_context_audio_tokens_total,n_generated_audio_tokens_total,usage_type,model,timestamp,user,num_requests,num_images,image_size,num_characters
+example_org_id,Personal,completion,5000.0,250.0,key_EXAMPLE000000000,example-key,redacted,project,Default Project,Default Project,,0.0,0.0,0.0,text,gpt-4o-mini-2024-07-18,1745366400,example_user,20,,,
+example_org_id,Personal,completion,3000.0,900.0,key_EXAMPLE000000000,example-key,redacted,project,Default Project,Default Project,,0.0,0.0,0.0,text,gpt-4o-2024-08-06,1745366400,example_user,30,,,
+example_org_id,Personal,generations,,,key_EXAMPLE000000000,example-key,redacted,project,Default Project,Default Project,,,,,dalle,dall-e-3,1745452800,example_user,10,10.0,1024x1024,
+example_org_id,Personal,,,,key_EXAMPLE000000000,example-key,redacted,project,Default Project,Default Project,,,,,tts,tts-1,1745452800,example_user,5,,,12345.0
